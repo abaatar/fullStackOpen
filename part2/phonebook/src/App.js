@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Notification from "./components/Notification";
 import personService from "./services/persons";
 
 const Filter = ({ searchName, handleSearchName }) => (
@@ -48,6 +49,10 @@ const App = () => {
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [searchName, setSearchName] = useState("");
+  const [notification, setNotification] = useState({
+    message: null,
+    isError: false,
+  });
 
   useEffect(() => {
     personService.getAll().then((initialPersons) => {
@@ -88,9 +93,35 @@ const App = () => {
                   p.id !== persons[i].id ? p : returnedPerson
                 )
               );
+
+              setNewName("");
+              setNewNumber("");
+              setNotification({
+                message: `Updated ${returnedPerson.name}`,
+                isError: false,
+              });
+              setTimeout(() => {
+                setNotification({
+                  message: null,
+                  isError: false,
+                });
+              }, 3000);
+            })
+            .catch((error) => {
+              setPersons(persons.filter((p) => p.name !== newName));
+              setNewName("");
+              setNewNumber("");
+              setNotification({
+                message: `Information of ${newName} has already been removed from server`,
+                isError: true,
+              });
+              setTimeout(() => {
+                setNotification({
+                  message: null,
+                  isError: false,
+                });
+              }, 3000);
             });
-          setNewName("");
-          setNewNumber("");
           return;
         } else return;
       }
@@ -105,6 +136,16 @@ const App = () => {
         setPersons(persons.concat(returnedPerson));
         setNewName("");
         setNewNumber("");
+        setNotification({
+          message: `Added ${returnedPerson.name}`,
+          isError: false,
+        });
+        setTimeout(() => {
+          setNotification({
+            message: null,
+            isError: false,
+          });
+        }, 3000);
       });
   };
 
@@ -112,6 +153,16 @@ const App = () => {
     if (window.confirm(`Delete ${person.name} ?`)) {
       personService.deletePerson(person.id);
       setPersons(persons.filter((p) => p.id !== person.id));
+      setNotification({
+        message: `Deleted ${person.name}`,
+        isError: false,
+      });
+      setTimeout(() => {
+        setNotification({
+          message: null,
+          isError: false,
+        });
+      }, 3000);
     }
   };
 
@@ -122,6 +173,11 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+
+      <Notification
+        message={notification.message}
+        isError={notification.isError}
+      />
 
       <Filter searchName={searchName} handleSearchName={handleSearchName} />
 
